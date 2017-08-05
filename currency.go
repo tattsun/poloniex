@@ -1,6 +1,33 @@
 package poloniex
 
-type Currency struct {
+import (
+	"github.com/pkg/errors"
+	"strings"
+)
+
+type CurrencyPair struct {
+	Trading    Currency
+	Settlement Currency
+}
+
+func NewCurrencyPair(trading Currency, settlement Currency) CurrencyPair {
+	return CurrencyPair{
+		Trading:    trading,
+		Settlement: settlement,
+	}
+}
+
+func parseCurrencyPair(str string) (CurrencyPair, error) {
+	xs := strings.Split(str, "_")
+	if len(xs) != 2 {
+		return CurrencyPair{}, errors.Errorf("cannot parse currency pair '%s'", str)
+	}
+	return NewCurrencyPair(Currency(xs[1]), Currency(xs[0])), nil
+}
+
+type Currency string
+
+type CurrencyInfo struct {
 	ID                 int     `json:"id"`
 	Name               string  `json:"name"`
 	MaxDailyWithdrawal int     `json:"maxDailyWithdrawal"`
@@ -10,33 +37,4 @@ type Currency struct {
 	DepositAddress     string  `json:"depositAddress"`
 	Delisted           int     `json:"delisted"`
 	Frozen             int     `json:"frozen"`
-}
-
-type Currencies struct {
-	m map[string]Currency
-}
-
-func newCurrencies(m map[string]Currency) *Currencies {
-	return &Currencies{
-		m: m,
-	}
-}
-
-func (c *Currencies) Map() map[string]Currency {
-	nm := make(map[string]Currency, len(c.m))
-	for k, v := range c.m {
-		nm[k] = v
-	}
-	return nm
-}
-
-func (c *Currencies) Get(key string) (Currency, bool) {
-	if c, ok := c.m[key]; ok {
-		return c, true
-	}
-	return Currency{}, false
-}
-
-func (c *Currencies) put(key string, cur Currency) {
-	c.m[key] = cur
 }
