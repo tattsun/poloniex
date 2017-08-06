@@ -1,6 +1,8 @@
 package poloniex
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/pkg/errors"
 	"strings"
 )
@@ -15,6 +17,27 @@ func NewCurrencyPair(trading Currency, settlement Currency) CurrencyPair {
 		Trading:    trading,
 		Settlement: settlement,
 	}
+}
+
+func (p *CurrencyPair) UnmarshalJSON(b []byte) error {
+	var s string
+	if err := json.Unmarshal(b, &s); err != nil {
+		return err
+	}
+
+	cp, err := parseCurrencyPair(s)
+	if err != nil {
+		return err
+	}
+
+	p.Trading = cp.Trading
+	p.Settlement = cp.Settlement
+	return nil
+}
+
+func (p CurrencyPair) MarshalJSON() ([]byte, error) {
+	s := fmt.Sprintf("%s_%s", p.Settlement, p.Trading)
+	return json.Marshal(s)
 }
 
 func parseCurrencyPair(str string) (CurrencyPair, error) {
